@@ -1,0 +1,148 @@
+Insert_end:
+	move $t0, $a0
+	beqz $t0, empty
+moveup:
+	lw $t1, ($t0)
+	move $t2, $t0
+	move $t0, $t1
+	bnez $t1, moveup
+	
+	li $v0, 9
+	addi $a0, $zero, 8
+	syscall
+	
+	move $t0, $v0
+	sw $t0, ($t2)
+	sw $a1, 4($t0)
+	
+	li $v0, 0
+	
+	jr $ra
+empty:
+	li $v0, -1
+	jr $ra
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+Delete_n:
+	li $t3, 2
+	move $t0, $a0
+nextdelete:	
+	lw $t1, ($t0)
+	move $t2, $t0
+	move $t0, $t1
+	beq $a1, $t3, deleteN
+	addi $t3, $t3, 1
+	beq $a1, 1, deleteNHead
+	bnez $t1, nextdelete
+	li $v0, -1
+	move $v1, $a0
+	jr $ra
+deleteNHead:
+	move $a0, $t1	
+	j deleteN_done
+deleteN:
+	lw $t1, ($t0)
+	sw $t1, ($t2)
+	j deleteN_done
+deleteN_done:
+	li $v0, 0
+	move $v1, $a0
+	jr $ra
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+	la $a0,msg218	# print change to menu
+	li $v0,4	
+	syscall	
+	
+	
+	la $a0,msg219	# print 2nd change to menu
+	li $v0,4	
+	syscall	
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+T7:	bne $s1,7, T8	
+	move $a0, $s0
+	jal invert_list
+	move $s0, $v0
+	la $a0,msginvert	
+	li $v0,4	
+	syscall
+	j MenuZ
+	
+T8:	bne $s1,8, T9	
+	move $a0, $s0
+	jal display_reverse_order_recursively
+	la $a0,msginvertdisplay
+	li $v0,4	
+	syscall	
+	j MenuZ
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+invert_list:
+	beqz $a0, invertlist_done
+	move $t0, $a0
+get_values:
+	lw $t1, 4($t0)
+	lw $t2,($t0)
+	move $t0, $t2
+	addi $sp, $sp, -4
+	sw $t1, ($sp)
+	bnez $t2, get_values
+	move $t0, $a0
+set_values:
+	lw $t1, ($sp)
+	sw $t1, 4($t0)
+	lw $t2, ($t0)
+	move $t0, $t2
+	addi $sp, $sp, 4
+	bnez $t2, set_values
+	move $v0, $a0
+invertlist_done:
+	jr $ra
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+
+display_reverse_order_recursively:
+	move $t0, $a0
+	lw $t1, 4($t0)
+	lw $t2, ($t0)
+	bnez $t2, recursion
+	
+	li $v0, 4
+	la $a0, msgreverselist
+	syscall
+	
+	li $v0, 1
+	add $a0, $zero, $t1
+	syscall 
+	
+	li $v0, 4
+	la $a0, msg85
+	syscall
+	
+	jr $ra
+recursion:
+	move $a0, $t2
+	addi $sp, $sp, -8
+	sw $t1, 0($sp)
+	sw $ra, 4($sp)
+	jal display_reverse_order_recursively
+	
+	lw $t1, 0($sp)
+	
+	li $v0, 1
+	add $a0, $zero, $t1
+	syscall
+	
+	li $v0, 4
+	la $a0, msg85
+	syscall
+	
+	lw $ra, 4($sp)
+	addi $sp, $sp, 8
+	jr $ra
